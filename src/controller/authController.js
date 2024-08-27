@@ -68,7 +68,6 @@ export const verifyOtpController = asyncHandler(async (req, res) => {
       res.status(500).json({ message: "otp not matching" });
     }
   } catch (error) {
-    console.log(error, "errorrrrrrrrrrrrrrrr");
     res.status(500).json({ message: "Something went wrong", data: error });
   }
 });
