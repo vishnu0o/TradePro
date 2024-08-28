@@ -24,6 +24,11 @@ const Schema = new mongoose.Schema({
     otp:{
         type:String,
         required:false
+    },
+    status:{
+        type:String,
+        required:false,
+        default:"Active"
     }
 });
 

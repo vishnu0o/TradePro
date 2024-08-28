@@ -5,10 +5,6 @@ import dotenv from "dotenv";
 import cors from "cors";
 import sanitizedConfig from "./src/config.js";
 import authRoute from "./src/routes/authRoute.js";
-import productRoute from "./src/routes/productRoute.js";
-import orderRoute from "./src/routes/orderRoute.js";
-import cartRoute from "./src/routes/cartRoute.js";
-
 import connectDb from "./src/database/config.js";
 
 // dotenv Configration
@@ -37,9 +33,7 @@ app.use(cors());
 // redirect api to router
 
 app.use("/api/auth", authRoute);
-app.use("/api/product", productRoute);
-app.use("/api/order", orderRoute);
-app.use("/api/cart", cartRoute);
+
 
 
 
