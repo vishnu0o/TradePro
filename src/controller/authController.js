@@ -172,10 +172,40 @@ export const forgotPasswordVerifyOtpController = asyncHandler(
           .status(200)
           .json({ message: "Verified successfully", status: true });
       } else {
-        res.status(200).json({ message: "Incorrect otp", status: false });
+        res.status(400).json({ message: "Incorrect otp", status: false });
       }
     } catch (error) {
       res.status(500).json({ message: "Something went wrong", data: error });
     }
   }
 );
+
+// @desc    Change password
+// @route   post /api/auth/changePassword
+// @access  user
+
+export const changePasswordController = asyncHandler(async (req, res) => {
+  try {
+    let { password, phoneNumber } = req.body;
+
+    const findUser = await registratedUser.findOne({
+      phoneNumber: phoneNumber
+    });
+
+    if (findUser) {
+      password = await bcrypt.hash(password, 10);
+      const updatePassword = await registratedUser.updateOne(
+        { phoneNumber: phoneNumber },
+        { $set: { password: password } }
+      );
+      res
+        .status(200)
+        .json({ message: "Password updated successfully", status: true });
+    } else {
+      res.status(400).json({ message: "User not exist", status: false });
+    }
+  } catch (error) {
+    console.log(error,"error")
+    res.status(500).json({ message: "Something went wrong", data: error });
+  }
+});

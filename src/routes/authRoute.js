@@ -1,5 +1,6 @@
 import express from "express";
 import {
+    changePasswordController,
   forgotPasswordController,
   forgotPasswordVerifyOtpController,
   loginController,
@@ -14,6 +15,8 @@ router.route("/verifyOtp").post(verifyOtpController);
 router.route("/login").post(loginController);
 router.route("/forgotPassword").post(forgotPasswordController);
 router.route("/forgotVerifyOtp").post(forgotPasswordVerifyOtpController);
+router.route("/changePassword").post(changePasswordController);
+
 
 
 export default router;
