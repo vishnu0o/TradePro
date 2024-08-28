@@ -17,19 +17,27 @@ export const registrationController = asyncHandler(async (req, res) => {
     const isUserExist = await registratedUser.findOne({ email: email });
 
     if (!isUserExist) {
-      sendOTP(phoneNumber)
-        .then(async (success) => {
-          sendOtp = success.otp;
-          res
-            .status(200)
-            .json({ message: "otp send successfully", status: true });
-        })
-        .catch((error) => {
-          console.log("Failed to send OTP:", error);
-          res
-            .status(500)
-            .json({ message: "Faild to send otp", status: false, data: error });
-        });
+      if (isUserExist.phoneNumber !== phoneNumber) {
+        sendOTP(phoneNumber)
+          .then(async (success) => {
+            sendOtp = success.otp;
+            res
+              .status(200)
+              .json({ message: "otp send successfully", status: true });
+          })
+          .catch((error) => {
+            console.log("Failed to send OTP:", error);
+            res.status(500).json({
+              message: "Faild to send otp",
+              status: false,
+              data: error
+            });
+          });
+      } else {
+        res
+          .status(400)
+          .json({ message: "Phonenumber already exist", status: false });
+      }
     } else {
       res.status(400).json({ message: "Email already exist", status: false });
     }
@@ -80,7 +88,7 @@ export const loginController = asyncHandler(async (req, res) => {
     let { email, password } = req.body;
 
     const isUserexist = await registratedUser.findOne({
-       email: email 
+      email: email
     });
 
     if (isUserexist) {
@@ -114,3 +122,60 @@ export const loginController = asyncHandler(async (req, res) => {
     res.status(500).json({ message: "Something went wrong", data: error });
   }
 });
+
+// @desc    Forgot password
+// @route   post /api/auth/forgotPassword
+// @access  user
+
+export const forgotPasswordController = asyncHandler(async (req, res) => {
+  try {
+    const { phoneNumber } = req.body;
+
+    const findUser = await registratedUser.findOne({
+      phoneNumber: phoneNumber
+    });
+    if (findUser) {
+      sendOTP(phoneNumber)
+        .then(async (success) => {
+          sendOtp = success.otp;
+          res
+            .status(200)
+            .json({ message: "otp send successfully", status: true });
+        })
+        .catch((error) => {
+          console.log("Failed to send OTP:", error);
+          res.status(500).json({
+            message: "Faild to send otp",
+            status: false,
+            data: error
+          });
+        });
+    } else {
+      res.status(400).json({ message: "PhoneNumber not exist", status: false });
+    }
+  } catch (error) {
+    res.status(500).json({ message: "Something went wrong", data: error });
+  }
+});
+
+// @desc    Verify otp
+// @route   post /api/auth/verifyOtp
+// @access  user
+
+export const forgotPasswordVerifyOtpController = asyncHandler(
+  async (req, res) => {
+    try {
+      const { otp } = req.body;
+
+      if (otp == sendOtp) {
+        res
+          .status(200)
+          .json({ message: "Verified successfully", status: true });
+      } else {
+        res.status(200).json({ message: "Incorrect otp", status: false });
+      }
+    } catch (error) {
+      res.status(500).json({ message: "Something went wrong", data: error });
+    }
+  }
+);
