@@ -4,7 +4,7 @@ import { sendOTP } from "../utils/TwilioConfig.js";
 import registratedUser from "../database/registratedUser.js";
 import generateToken from "../utils/generateToken.js";
 
-let sendOtp;
+let sendOtp = []
 
 // @desc    register
 // @route   post /api/auth/register
@@ -14,34 +14,33 @@ export const registrationController = asyncHandler(async (req, res) => {
   try {
     let { email, phoneNumber } = req.body;
 
+    console.log(req.body, "reqqqqqqqqqqqqqqqqqq");
+
     const isUserExist = await registratedUser.findOne({ email: email });
 
-    if (!isUserExist) {
-      if (isUserExist.phoneNumber !== phoneNumber) {
-        sendOTP(phoneNumber)
-          .then(async (success) => {
-            sendOtp = success.otp;
-            res
-              .status(200)
-              .json({ message: "otp send successfully", status: true });
-          })
-          .catch((error) => {
-            console.log("Failed to send OTP:", error);
-            res.status(500).json({
-              message: "Faild to send otp",
-              status: false,
-              data: error
-            });
+    console.log(isUserExist, "isUserExistisUserExist");
+
+    if (isUserExist == null) {
+      sendOTP(phoneNumber)
+        .then(async (success) => {
+          sendOtp.push(success.otp);
+          res
+            .status(200)
+            .json({ message: "otp send successfully", status: true });
+        })
+        .catch((error) => {
+          console.log("Failed to send OTP:", error);
+          res.status(500).json({
+            message: "Faild to send otp",
+            status: false,
+            data: error
           });
-      } else {
-        res
-          .status(400)
-          .json({ message: "Phonenumber already exist", status: false });
-      }
+        });
     } else {
       res.status(400).json({ message: "Email already exist", status: false });
     }
   } catch (error) {
+    console.log(error, "errorrrrrrrrrr");
     res.status(500).json({ message: "Something went wrong", data: error });
   }
 });
@@ -53,6 +52,10 @@ export const registrationController = asyncHandler(async (req, res) => {
 export const verifyOtpController = asyncHandler(async (req, res) => {
   try {
     let { name, email, phoneNumber, countryCode, password, otp } = req.body;
+
+    console.log(sendOtp,"sendOtpsendOtpsendOtp")
+    console.log(req.body,"reqqqqqqqqqqqqqqq")
+
 
     if (otp == sendOtp) {
       password = await bcrypt.hash(password, 10);
@@ -205,7 +208,7 @@ export const changePasswordController = asyncHandler(async (req, res) => {
       res.status(400).json({ message: "User not exist", status: false });
     }
   } catch (error) {
-    console.log(error,"error")
+    console.log(error, "error");
     res.status(500).json({ message: "Something went wrong", data: error });
   }
 });
