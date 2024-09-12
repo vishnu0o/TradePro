@@ -5,6 +5,7 @@ import dotenv from "dotenv";
 import cors from "cors";
 import sanitizedConfig from "./src/config.js";
 import authRoute from "./src/routes/authRoute.js";
+import courseRoute from "./src/routes/courseRoute.js";
 import connectDb from "./src/database/config.js";
 
 // dotenv Configration
@@ -33,6 +34,8 @@ app.use(cors());
 // redirect api to router
 
 app.use("/api/auth", authRoute);
+app.use("/api/course", courseRoute);
+
 
 
 

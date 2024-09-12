@@ -4,7 +4,7 @@ import { sendOTP } from "../utils/TwilioConfig.js";
 import registratedUser from "../database/registratedUser.js";
 import generateToken from "../utils/generateToken.js";
 
-let sendOtp = []
+let sendOtp = [];
 
 // @desc    register
 // @route   post /api/auth/register
@@ -53,9 +53,8 @@ export const verifyOtpController = asyncHandler(async (req, res) => {
   try {
     let { name, email, phoneNumber, countryCode, password, otp } = req.body;
 
-    console.log(sendOtp,"sendOtpsendOtpsendOtp")
-    console.log(req.body,"reqqqqqqqqqqqqqqq")
-
+    console.log(sendOtp, "sendOtpsendOtpsendOtp");
+    console.log(req.body, "reqqqqqqqqqqqqqqq");
 
     if (otp == sendOtp) {
       password = await bcrypt.hash(password, 10);
