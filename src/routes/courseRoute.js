@@ -3,7 +3,6 @@ import { courseFindController, courseFindOneController } from "../controller/cou
 import auth from "../middleware/auth.js";
 const router = express.Router();
 router.route("/findCourse").get(auth,courseFindController);
-router.route("/findOneCourse").get(auth,courseFindOneController);
-
+router.route("/findOneCourse").get(courseFindOneController);
 
 export default router;

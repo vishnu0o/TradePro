@@ -30,10 +30,32 @@ export const courseFindOneController = asyncHandler(async (req, res) => {
   try {
     const { id } = req.query;
 
-    const findCourse = await Courses.findOne({_id:id });
+    const findCourse = await Courses.findOne({ _id: id });
+
+    if (!findCourse) {
+      return res.status(404).json({
+        message: "Course not found",
+        status: false
+      });
+    }
+
+    let numberOfVideos = 0;
+    let quizCount = 0;
+
+    findCourse.lessons.forEach(lesson => {
+      numberOfVideos += lesson.chapters.length;
+      lesson.chapters.forEach(chapter => {
+        quizCount += chapter.quiz.length;
+      });
+    });
+
     res.status(200).json({
-      message: "Course find successfully",
-      data: findCourse,
+      message: "Course found successfully",
+      data: {
+        ...findCourse.toObject(),
+        numberOfVideos, 
+        quizCount   
+      },
       status: true
     });
   } catch (error) {
@@ -41,3 +63,4 @@ export const courseFindOneController = asyncHandler(async (req, res) => {
     res.status(500).json({ message: "Something went wrong", data: error });
   }
 });
+

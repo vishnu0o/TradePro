@@ -19,6 +19,21 @@ const Schema = new mongoose.Schema({
   price:{
     type:String
   },
+  publishedYear:{
+    type:String
+  },
+  courseDuration:{
+    type:String
+  },
+  rating:{
+    type:String
+  },
+  starRating:{
+    type:Number
+  },
+  entrolledStudents:{
+    type:Number
+  },
   language: {
     type: [String],
   },
