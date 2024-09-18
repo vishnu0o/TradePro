@@ -29,6 +29,11 @@ const Schema = new mongoose.Schema({
         type:String,
         required:false,
         default:"Active"
+    },
+    isAdmin:{
+        type:Boolean,
+        required:false,
+        default:false
     }
 });
 
