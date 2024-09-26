@@ -1,8 +1,10 @@
 import express from "express";
-import { courseFindController, courseFindOneController } from "../controller/courseController.js";
+import { checkOutController, courseFindController, courseFindOneController } from "../controller/courseController.js";
 import auth from "../middleware/auth.js";
 const router = express.Router();
-router.route("/findCourse").get(auth,courseFindController);
+router.route("/findCourse").get(courseFindController);
 router.route("/findOneCourse").get(courseFindOneController);
+router.route("/checkout").post(checkOutController);
+
 
 export default router;

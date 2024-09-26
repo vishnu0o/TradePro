@@ -1,5 +1,8 @@
 import asyncHandler from "express-async-handler";
 import Courses from "../database/Course.js";
+import purchasedCourse from "../database/purshasedCourse.js";
+import Lesson from "../database/courseLesson.js";
+import Chapter from "../database/courseChapter.js";
 
 // @desc    course find
 // @route   get /api/course/findCourse
@@ -7,13 +10,22 @@ import Courses from "../database/Course.js";
 
 export const courseFindController = asyncHandler(async (req, res) => {
   try {
-    const { pageNumber } = req.query;
+    const { pageNumber, userId } = req.query;
     const limit = 5;
     const skipValue = parseInt(pageNumber) * limit;
     const findCourse = await Courses.find({}).limit(limit).skip(skipValue);
+    const findPurchasedCourse = await purchasedCourse.findOne({
+      userId: userId
+    });
+    const findCourseFromPurchasedCourse = await Courses.find({
+      _id: findPurchasedCourse?.courseId
+    });
     res.status(200).json({
       message: "Course find successfully",
-      data: findCourse,
+      data: {
+        allCourses: findCourse,
+        purchasedCourses: findCourseFromPurchasedCourse
+      },
       status: true
     });
   } catch (error) {
@@ -30,8 +42,14 @@ export const courseFindOneController = asyncHandler(async (req, res) => {
   try {
     const { id } = req.query;
 
-    const findCourse = await Courses.findOne({ _id: id });
-
+    const findCourse = await Courses.findOne({ _id: id })
+      .populate({
+        path: "lessons",
+        populate: {
+          path: "chapters"
+        }
+      })
+      .exec();
     if (!findCourse) {
       return res.status(404).json({
         message: "Course not found",
@@ -45,7 +63,7 @@ export const courseFindOneController = asyncHandler(async (req, res) => {
     findCourse.lessons.forEach(lesson => {
       numberOfVideos += lesson.chapters.length;
       lesson.chapters.forEach(chapter => {
-        quizCount += chapter.quiz.length;
+        quizCount += chapter?.quiz?.length;
       });
     });
 
@@ -53,8 +71,8 @@ export const courseFindOneController = asyncHandler(async (req, res) => {
       message: "Course found successfully",
       data: {
         ...findCourse.toObject(),
-        numberOfVideos, 
-        quizCount   
+        numberOfVideos,
+        quizCount
       },
       status: true
     });
@@ -64,3 +82,46 @@ export const courseFindOneController = asyncHandler(async (req, res) => {
   }
 });
 
+// @desc    checkout
+// @route   get /api/course/checkout
+// @access  user
+
+export const checkOutController = asyncHandler(async (req, res) => {
+  try {
+    const { userId, language, courseId, paymentId } = req.body;
+    const currentDate = new Date();
+    const formattedDate = currentDate.toLocaleDateString("en-GB", {
+      day: "numeric",
+      month: "long",
+      year: "numeric"
+    });
+    const checkOut = await purchasedCourse.create({
+      userId: userId,
+      language: language,
+      courseId: courseId,
+      paymentId: paymentId,
+      purchasedAt: formattedDate
+    });
+    res
+      .status(200)
+      .json({ message: "Course purchased successfully", status: true });
+  } catch (error) {
+    console.log(error, "error");
+    res.status(500).json({ message: "Something went wrong", data: error });
+  }
+});
+
+
+// // @desc    Chapter isPlayed api
+// // @route   get /api/course/chapterIsPlayed
+// // @access  user
+
+// export const chapterIsPlayedController = asyncHandler(async(req,res)=>{
+//   try{
+//     const {}
+  
+// } catch (error) {
+//   console.log(error, "error");
+//   res.status(500).json({ message: "Something went wrong", data: error });
+// }
+// })

@@ -37,36 +37,13 @@ const Schema = new mongoose.Schema({
   language: {
     type: [String],
   },
-  lessons: {
-    type: [
-      {
-        lessonName: {
-          type: String,
-        },
-        chapters: [
-          {
-            title: {
-              type: String,
-            },
-            video: {
-              type: String,
-            },
-            quiz: [
-              {
-                question: {
-                  type: String,
-                },
-                options: [String],
-                answer: {
-                  type: String,
-                },
-              },
-            ],
-          },
-        ],
-      },
-    ],
-  },
+  lessons: [
+    {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Lessons',
+    }
+  ]
+
 });
 
 const Courses = mongoose.model("Courses", Schema);
