@@ -60,9 +60,9 @@ export const courseFindOneController = asyncHandler(async (req, res) => {
     let numberOfVideos = 0;
     let quizCount = 0;
 
-    findCourse.lessons.forEach(lesson => {
+    findCourse.lessons.forEach((lesson) => {
       numberOfVideos += lesson.chapters.length;
-      lesson.chapters.forEach(chapter => {
+      lesson.chapters.forEach((chapter) => {
         quizCount += chapter?.quiz?.length;
       });
     });
@@ -111,17 +111,29 @@ export const checkOutController = asyncHandler(async (req, res) => {
   }
 });
 
+// @desc    Chapter isPlayed api
+// @route   get /api/course/chapterIsPlayed
+// @access  user
 
-// // @desc    Chapter isPlayed api
-// // @route   get /api/course/chapterIsPlayed
-// // @access  user
+export const chapterIsPlayedController = asyncHandler(async (req, res) => {
+  try {
+    const { purchasedId, chapterId } = req.body;
+    const updateIsChapterPlayed = await purchasedCourse.updateOne(
+      { _id: purchasedId},
+      {
+        $push: { isPlayedChapters: chapterId }
+      }
+    );
 
-// export const chapterIsPlayedController = asyncHandler(async(req,res)=>{
-//   try{
-//     const {}
-  
-// } catch (error) {
-//   console.log(error, "error");
-//   res.status(500).json({ message: "Something went wrong", data: error });
-// }
-// })
+    if (updateIsChapterPlayed.modifiedCount > 0) {
+      res
+        .status(200)
+        .json({ message: "Chapter marked as played successfully" });
+    } else {
+      res.status(404).json({ message: "No matching record found to update" });
+    }
+  } catch (error) {
+    console.log(error, "error");
+    res.status(500).json({ message: "Something went wrong", data: error });
+  }
+});
