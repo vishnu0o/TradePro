@@ -95,16 +95,25 @@ export const checkOutController = asyncHandler(async (req, res) => {
       month: "long",
       year: "numeric"
     });
-    const checkOut = await purchasedCourse.create({
+
+    const isPurchasedCourseExist = await purchasedCourse.findOne({
       userId: userId,
-      language: language,
-      courseId: courseId,
-      paymentId: paymentId,
-      purchasedAt: formattedDate
+      courseId: courseId
     });
-    res
-      .status(200)
-      .json({ message: "Course purchased successfully", status: true });
+    if (!isPurchasedCourseExist) {
+      const checkOut = await purchasedCourse.create({
+        userId: userId,
+        language: language,
+        courseId: courseId,
+        paymentId: paymentId,
+        purchasedAt: formattedDate
+      });
+      res
+        .status(200)
+        .json({ message: "Course purchased successfully", status: true });
+    } else {
+      res.status(409).json({ message: "Course already exist", status: true });
+    }
   } catch (error) {
     console.log(error, "error");
     res.status(500).json({ message: "Something went wrong", data: error });
@@ -119,7 +128,7 @@ export const chapterIsPlayedController = asyncHandler(async (req, res) => {
   try {
     const { purchasedId, chapterId } = req.body;
     const updateIsChapterPlayed = await purchasedCourse.updateOne(
-      { _id: purchasedId},
+      { _id: purchasedId },
       {
         $push: { isPlayedChapters: chapterId }
       }
