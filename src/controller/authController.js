@@ -5,6 +5,8 @@ import registratedUser from "../database/registratedUser.js";
 import generateToken from "../utils/generateToken.js";
 
 let sendOtp = [];
+console.log(sendOtp, "sendOtpsendOtpsendOtp");
+
 
 // @desc    register
 // @route   post /api/auth/register
@@ -55,8 +57,7 @@ export const verifyOtpController = asyncHandler(async (req, res) => {
 
     console.log(sendOtp, "sendOtpsendOtpsendOtp");
     console.log(req.body, "reqqqqqqqqqqqqqqq");
-
-    if (otp == sendOtp) {
+    if (otp == sendOtp[sendOtp.length -  1]) {
       password = await bcrypt.hash(password, 10);
       const createUser = await registratedUser.create({
         name: name,
@@ -64,6 +65,8 @@ export const verifyOtpController = asyncHandler(async (req, res) => {
         countryCode: countryCode,
         phoneNumber: phoneNumber,
         password: password,
+        isNotification:false,
+        profileImage:"",
         status: "Active"
       });
       let token = generateToken(createUser._id);

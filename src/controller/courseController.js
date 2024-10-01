@@ -14,17 +14,15 @@ export const courseFindController = asyncHandler(async (req, res) => {
     const limit = 5;
     const skipValue = parseInt(pageNumber) * limit;
     const findCourse = await Courses.find({}).limit(limit).skip(skipValue);
-    const findPurchasedCourse = await purchasedCourse.findOne({
+    const findPurchasedCourse = await purchasedCourse.find({
       userId: userId
-    });
-    const findCourseFromPurchasedCourse = await Courses.find({
-      _id: findPurchasedCourse?.courseId
-    });
+    }).populate("courseId")
+   
     res.status(200).json({
       message: "Course find successfully",
       data: {
         allCourses: findCourse,
-        purchasedCourses: findCourseFromPurchasedCourse
+        purchasedCourses: findPurchasedCourse
       },
       status: true
     });
@@ -130,7 +128,7 @@ export const chapterIsPlayedController = asyncHandler(async (req, res) => {
     const updateIsChapterPlayed = await purchasedCourse.updateOne(
       { _id: purchasedId },
       {
-        $push: { isPlayedChapters: chapterId }
+        $addToSet: { isPlayedChapters: chapterId }
       }
     );
 
@@ -139,7 +137,7 @@ export const chapterIsPlayedController = asyncHandler(async (req, res) => {
         .status(200)
         .json({ message: "Chapter marked as played successfully" });
     } else {
-      res.status(404).json({ message: "No matching record found to update" });
+      res.status(404).json({ message: "Chapter already isPlayed" });
     }
   } catch (error) {
     console.log(error, "error");

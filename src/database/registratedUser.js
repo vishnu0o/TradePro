@@ -25,6 +25,14 @@ const Schema = new mongoose.Schema({
         type:String,
         required:false
     },
+    isNotification:{
+        type:Boolean,
+        required:false
+    },
+    profileImage:{
+        type:String,
+        required:false
+    },
     status:{
         type:String,
         required:false,
