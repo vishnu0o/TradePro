@@ -2,6 +2,7 @@ import asyncHandler from "express-async-handler";
 import registratedUser from "../database/registratedUser.js";
 import { uploadFileToS3 } from "../utils/S3Upload.js";
 import fs from "fs";
+import wishlist from "../database/wishlist.js";
 
 // @desc    profile find
 // @route   get /api/settings/findProfile
@@ -47,8 +48,8 @@ export const profileUpdateController = asyncHandler(async (req, res) => {
         contentType
       );
 
-       // Remove the file from the local filesystem after successful upload
-       fs.unlink(req.file.path, (err) => {
+      // Remove the file from the local filesystem after successful upload
+      fs.unlink(req.file.path, (err) => {
         if (err) {
           console.error("Error deleting the file from local storage:", err);
         } else {
@@ -56,7 +57,6 @@ export const profileUpdateController = asyncHandler(async (req, res) => {
         }
       });
     }
-
 
     console.log(
       uploadedProfileImageUrl,
@@ -90,6 +90,63 @@ export const profileUpdateController = asyncHandler(async (req, res) => {
         status: true
       });
     }
+  } catch (error) {
+    console.log(error, "error");
+    res.status(500).json({ message: "Something went wrong", data: error });
+  }
+});
+
+// @desc    wishlist create
+// @route   get /api/settings/createWishlist
+// @access  user
+
+export const createWishlistController = asyncHandler(async (req, res) => {
+  try {
+    const { userId, courseId, language } = req.body;
+
+    const createWishlist = await wishlist.create({
+      courseId: courseId,
+      language: language,
+      userId: userId
+    });
+    res.status(200).json({ message: "Added to wishlist successfully" });
+  } catch (error) {
+    console.log(error, "error");
+    res.status(500).json({ message: "Something went wrong", data: error });
+  }
+});
+
+// @desc    wishlist create
+// @route   get /api/settings/findWishlist
+// @access  user
+
+export const findWishlistcontroller = asyncHandler(async (req, res) => {
+  try {
+    const findWishlist = await wishlist.find({}).populate("courseId");
+    if (findWishlist) {
+      res
+        .status(200)
+        .json({ message: "wishlist find successfully", data: findWishlist });
+    } else {
+      res.status(200).json({ message: "Something went wrong", status: false });
+    }
+  } catch (error) {
+    console.log(error, "error");
+    res.status(500).json({ message: "Something went wrong", data: error });
+  }
+});
+
+// @desc    wishlist delete
+// @route   get /api/settings/removeWishlist
+// @access  user
+
+export const removeWishlistcontroller = asyncHandler(async (req, res) => {
+  try {
+    const { id } = req.query;
+    const removeWishlist = await wishlist.deleteOne({ _id: id });
+    res
+      .status(200)
+      .json({ message: "Delete successfully", status: true });
   } catch (error) {
     console.log(error, "error");
     res.status(500).json({ message: "Something went wrong", data: error });
