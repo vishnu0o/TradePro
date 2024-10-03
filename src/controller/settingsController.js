@@ -144,9 +144,25 @@ export const removeWishlistcontroller = asyncHandler(async (req, res) => {
   try {
     const { id } = req.query;
     const removeWishlist = await wishlist.deleteOne({ _id: id });
-    res
-      .status(200)
-      .json({ message: "Delete successfully", status: true });
+    res.status(200).json({ message: "Delete successfully", status: true });
+  } catch (error) {
+    console.log(error, "error");
+    res.status(500).json({ message: "Something went wrong", data: error });
+  }
+});
+
+// @desc    referralCode find
+// @route   get /api/settings/findReferralCode
+// @access  user
+
+export const findReferralController = asyncHandler(async (req, res) => {
+  const { userId } = req.query;
+  try {
+    const findReferralCode = await registratedUser.findOne({
+      _id: userId
+    });
+
+    res.status(200).json({message:"ReferralCode find successfully",data:findReferralCode?.referralCode})
   } catch (error) {
     console.log(error, "error");
     res.status(500).json({ message: "Something went wrong", data: error });

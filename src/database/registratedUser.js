@@ -42,6 +42,13 @@ const Schema = new mongoose.Schema({
         type:Boolean,
         required:false,
         default:false
+    },
+    referralCode:{
+        type:String,
+        required:true
+    },
+    referredBy:{
+        type:String
     }
 });
 

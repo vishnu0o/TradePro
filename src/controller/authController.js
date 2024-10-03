@@ -3,8 +3,33 @@ import bcrypt from "bcrypt";
 import { sendOTP } from "../utils/TwilioConfig.js";
 import registratedUser from "../database/registratedUser.js";
 import generateToken from "../utils/generateToken.js";
+import OtpStore from "../database/otpStore.js";
 
 let sendOtp = [];
+
+// Function for creation Random code :::::::::::::::::::
+
+function generateRandomCode() {
+  const digits = "0123456789";
+  const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+
+  let result = "";
+
+  // Add two random digits
+  for (let i = 0; i < 2; i++) {
+    const randomDigitIndex = Math.floor(Math.random() * digits.length);
+    result += digits[randomDigitIndex];
+  }
+
+  // Add four random letters
+  for (let i = 0; i < 4; i++) {
+    const randomLetterIndex = Math.floor(Math.random() * letters.length);
+    result += letters[randomLetterIndex];
+  }
+
+  return result;
+}
+let randomCouponCode = generateRandomCode();
 console.log(sendOtp, "sendOtpsendOtpsendOtp");
 
 // @desc    register
@@ -14,40 +39,18 @@ console.log(sendOtp, "sendOtpsendOtpsendOtp");
 export const registrationController = asyncHandler(async (req, res) => {
   try {
     let { email, phoneNumber } = req.body;
-
-    // function generateRandomCode() {
-    //   const digits = '0123456789';
-    //   const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-      
-    //   let result = '';
-      
-    //   // Add two random digits
-    //   for (let i = 0; i < 2; i++) {
-    //     const randomDigitIndex = Math.floor(Math.random() * digits.length);
-    //     result += digits[randomDigitIndex];
-    //   }
-    
-    //   // Add four random letters
-    //   for (let i = 0; i < 4; i++) {
-    //     const randomLetterIndex = Math.floor(Math.random() * letters.length);
-    //     result += letters[randomLetterIndex];
-    //   }
-    
-    //   return result;
-    // }
-
-    // let randomCouponCode = generateRandomCode()
-        
-    const isUserExist = await registratedUser.findOne({ email: email });
+    const isUserExist = await registratedUser.findOne({
+      $or: [{ email: email }, { phoneNumber: phoneNumber }]
+    });
     if (isUserExist == null) {
       sendOTP(phoneNumber)
         .then(async (success) => {
-          // const createRegistration = await registratedUser.create({
-          //   email: email,
-          //   phoneNumber: phoneNumber,
-          //   otp: success.otp
-          // });s
-          sendOtp.push(success.otp)
+          await OtpStore.deleteMany({});
+          const createOtp = await OtpStore.create({
+            phoneNumber: phoneNumber,
+            otp: success.otp
+          });
+          sendOtp.push(success.otp);
           res
             .status(200)
             .json({ message: "otp send successfully", status: true });
@@ -61,7 +64,7 @@ export const registrationController = asyncHandler(async (req, res) => {
           });
         });
     } else {
-      res.status(400).json({ message: "Email already exist", status: false });
+      res.status(400).json({ message: "Email or Phone already exist", status: false });
     }
   } catch (error) {
     console.log(error, "errorrrrrrrrrr");
@@ -75,11 +78,20 @@ export const registrationController = asyncHandler(async (req, res) => {
 
 export const verifyOtpController = asyncHandler(async (req, res) => {
   try {
-    let { name, email, phoneNumber, countryCode, password, otp } = req.body;
+    let { name, email, phoneNumber, countryCode, password, otp, referralCode } =
+      req.body;
 
-    console.log(sendOtp, "sendOtpsendOtpsendOtp");
-    console.log(req.body, "reqqqqqqqqqqqqqqq");
-    if (otp == sendOtp[sendOtp.length - 1]) {
+    const findStoredOtp = await OtpStore.findOne({ phoneNumber });
+
+    let findUserWithReferralCode;
+
+    if (referralCode) {
+      findUserWithReferralCode = await registratedUser.findOne({
+        referralCode: referralCode
+      });
+    }
+
+    if (otp == findStoredOtp?.otp) {
       password = await bcrypt.hash(password, 10);
       const createUser = await registratedUser.create({
         name: name,
@@ -89,7 +101,11 @@ export const verifyOtpController = asyncHandler(async (req, res) => {
         password: password,
         isNotification: false,
         profileImage: "",
-        status: "Active"
+        status: "Active",
+        referralCode: randomCouponCode,
+        referredBy: findUserWithReferralCode
+          ? findUserWithReferralCode?._id
+          : ""
       });
       let token = generateToken(createUser._id);
       res.status(200).json({
