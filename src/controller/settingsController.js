@@ -3,6 +3,7 @@ import registratedUser from "../database/registratedUser.js";
 import { uploadFileToS3 } from "../utils/S3Upload.js";
 import fs from "fs";
 import wishlist from "../database/wishlist.js";
+import Courses from "../database/Course.js";
 
 // @desc    profile find
 // @route   get /api/settings/findProfile
@@ -104,19 +105,31 @@ export const createWishlistController = asyncHandler(async (req, res) => {
   try {
     const { userId, courseId, language } = req.body;
 
-    const createWishlist = await wishlist.create({
+    const isWishListed = await wishlist.findOne({
       courseId: courseId,
-      language: language,
       userId: userId
     });
-    res.status(200).json({ message: "Added to wishlist successfully" });
+
+    if (!isWishListed) {
+      const findCourse = await Courses.findOne({ _id: courseId });
+      const createWishlist = await wishlist.create({
+        courseId: courseId,
+        language: language,
+        userId: userId
+      });
+      findCourse?.wishlist_User?.push(userId);
+      await findCourse.save();
+      res.status(200).json({ message: "Added to wishlist successfully" });
+    } else {
+      res.status(401).json({ message: "Course already wishlisted" });
+    }
   } catch (error) {
     console.log(error, "error");
     res.status(500).json({ message: "Something went wrong", data: error });
   }
 });
 
-// @desc    wishlist create
+// @desc    wishlist find
 // @route   get /api/settings/findWishlist
 // @access  user
 
@@ -142,8 +155,12 @@ export const findWishlistcontroller = asyncHandler(async (req, res) => {
 
 export const removeWishlistcontroller = asyncHandler(async (req, res) => {
   try {
-    const { id } = req.query;
-    const removeWishlist = await wishlist.deleteOne({ _id: id });
+    const { wishlistID, userID, courseID } = req.query;
+    const removeWishlist = await wishlist.deleteOne({ _id: wishlistID });
+    await Courses.updateOne(
+      { _id: courseID },
+      { $pull: { wishlist_User: userID } }
+    );
     res.status(200).json({ message: "Delete successfully", status: true });
   } catch (error) {
     console.log(error, "error");
@@ -162,7 +179,12 @@ export const findReferralController = asyncHandler(async (req, res) => {
       _id: userId
     });
 
-    res.status(200).json({message:"ReferralCode find successfully",data:findReferralCode?.referralCode})
+    res
+      .status(200)
+      .json({
+        message: "ReferralCode find successfully",
+        data: findReferralCode?.referralCode
+      });
   } catch (error) {
     console.log(error, "error");
     res.status(500).json({ message: "Something went wrong", data: error });

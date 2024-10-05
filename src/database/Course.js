@@ -2,48 +2,53 @@ import mongoose from "mongoose";
 
 const Schema = new mongoose.Schema({
   previewVideo: {
-    type: String,
+    type: String
   },
   title: {
-    type: String,
+    type: String
   },
   author: {
-    type: String,
+    type: String
   },
   description: {
-    type: String,
+    type: String
   },
   courseType: {
-    type: String,
+    type: String
   },
-  price:{
-    type:String
+  price: {
+    type: String
   },
-  publishedYear:{
-    type:String
+  publishedYear: {
+    type: String
   },
-  courseDuration:{
-    type:String
+  courseDuration: {
+    type: String
   },
-  rating:{
-    type:String
+  rating: {
+    type: String
   },
-  starRating:{
-    type:Number
+  starRating: {
+    type: Number
   },
-  entrolledStudents:{
-    type:Number
+  entrolledStudents: {
+    type: Number
   },
   language: {
-    type: [String],
+    type: [String]
   },
   lessons: [
     {
       type: mongoose.Schema.Types.ObjectId,
-      ref: 'Lessons',
+      ref: "Lessons"
+    }
+  ],
+  wishlist_User: [
+    {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "registratedUser"
     }
   ]
-
 });
 
 const Courses = mongoose.model("Courses", Schema);
