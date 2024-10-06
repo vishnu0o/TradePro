@@ -1,6 +1,7 @@
 import express from "express";
 import auth from "../middleware/auth.js";
 import {
+  changePasswordController,
   createWishlistController,
   findReferralController,
   findWishlistcontroller,
@@ -18,6 +19,8 @@ router.route("/findWishlist").get(auth, findWishlistcontroller);
 router.route("/createWishlist").post(auth, createWishlistController);
 router.route("/removeWishlist").delete(auth, removeWishlistcontroller);
 router.route("/findReferralCode").get(auth, findReferralController);
+router.route("/changePassword").put(auth, changePasswordController);
+
 
 
 

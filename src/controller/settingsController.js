@@ -1,4 +1,5 @@
 import asyncHandler from "express-async-handler";
+import bcrypt from "bcrypt";
 import registratedUser from "../database/registratedUser.js";
 import { uploadFileToS3 } from "../utils/S3Upload.js";
 import fs from "fs";
@@ -179,12 +180,60 @@ export const findReferralController = asyncHandler(async (req, res) => {
       _id: userId
     });
 
-    res
-      .status(200)
-      .json({
-        message: "ReferralCode find successfully",
-        data: findReferralCode?.referralCode
-      });
+    res.status(200).json({
+      message: "ReferralCode find successfully",
+      data: findReferralCode?.referralCode
+    });
+  } catch (error) {
+    console.log(error, "error");
+    res.status(500).json({ message: "Something went wrong", data: error });
+  }
+});
+
+// @desc    changePassword api
+// @route   put /api/settings/changePassword
+// @access  user
+
+export const changePasswordController = asyncHandler(async (req, res) => {
+  try {
+    let { oldPassword, newPassword, userID } = req.body;
+
+    const findUser = await registratedUser.findOne({
+      _id: userID
+    });
+    if (findUser) {
+      bcrypt
+        .compare(oldPassword, findUser.password)
+        .then(async (isMatch) => {
+          if (isMatch) {
+            newPassword = await bcrypt.hash(newPassword, 10);
+            await registratedUser.updateOne(
+              { _id: userID },
+              {
+                $set: {
+                  password: newPassword
+                }
+              }
+            );
+            res.status(201).send({
+              message: "change password successfully",
+              status: true
+            });
+          } else {
+            res
+              .status(400)
+              .json({ message: "Incorrect old password", status: false });
+          }
+        })
+        .catch((err) => {
+          res.status(500).json({
+            message: "Error occurred while comparing passwords",
+            status: false
+          });
+        });
+    } else {
+      res.status(400).json({ message: "User not exist", status: false });
+    }
   } catch (error) {
     console.log(error, "error");
     res.status(500).json({ message: "Something went wrong", data: error });
