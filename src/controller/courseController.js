@@ -3,6 +3,9 @@ import Courses from "../database/Course.js";
 import purchasedCourse from "../database/purshasedCourse.js";
 import Lesson from "../database/courseLesson.js";
 import Chapter from "../database/courseChapter.js";
+import referalLevel from "../database/referalLevelMaster.js";
+import referralWallet from "../database/referralWallet.js";
+import registratedUser from "../database/registratedUser.js";
 
 // @desc    course find
 // @route   get /api/course/findCourse
@@ -14,10 +17,47 @@ export const courseFindController = asyncHandler(async (req, res) => {
     const limit = 5;
     const skipValue = parseInt(pageNumber) * limit;
     const findCourse = await Courses.find({}).limit(limit).skip(skipValue);
-    const findPurchasedCourse = await purchasedCourse.find({
-      userId: userId
-    }).populate("courseId")
-   
+    const findPurchasedCourse = await purchasedCourse
+      .find({ userId: userId })
+      .populate({
+        path: "courseId",
+        populate: {
+          path: "lessons",
+          populate: {
+            path: "chapters"
+          }
+        }
+      })
+      .lean();
+
+    // Add totalChapters and totalQuiz to each course
+    findPurchasedCourse.forEach((course) => {
+      let totalChapters = 0;
+      let totalQuiz = 0;
+
+      // Ensure lessons are present
+      if (course.courseId.lessons && course.courseId.lessons.length) {
+        course.courseId.lessons.forEach((lesson) => {
+          // Count the chapters if they exist
+          if (lesson.chapters) {
+            totalChapters += lesson.chapters.length;
+          }
+
+          // Count the quizzes if they exist
+          if (lesson.quiz) {
+            totalQuiz += lesson.quiz.length;
+          }
+        });
+      }
+
+      // Add new keys to the course object
+      course.totalChapters = totalChapters;
+      course.totalQuiz = totalQuiz;
+    });
+
+    // Now `findPurchasedCourse` contains `totalChapters` and `totalQuiz`
+    console.log(findPurchasedCourse);
+
     res.status(200).json({
       message: "Course find successfully",
       data: {
@@ -87,6 +127,7 @@ export const courseFindOneController = asyncHandler(async (req, res) => {
 export const checkOutController = asyncHandler(async (req, res) => {
   try {
     const { userId, language, courseId, paymentId } = req.body;
+    console.log(req.body, "reqqqqqqqqqqqqqq");
     const currentDate = new Date();
     const formattedDate = currentDate.toLocaleDateString("en-GB", {
       day: "numeric",
@@ -98,6 +139,154 @@ export const checkOutController = asyncHandler(async (req, res) => {
       userId: userId,
       courseId: courseId
     });
+
+    // variables for level 1 :::::::::::::::::::
+
+    let percentage;
+    let coursePrice;
+    let walletAmount;
+
+    // variables for level 2 :::::::::::::::::::
+
+    let levelTwopercentage;
+    let levelTwocoursePrice;
+    let levelTwowalletAmount;
+
+    // Here i try to find the purchasing user details
+
+    const findUser = await registratedUser.findOne({ _id: userId });
+
+    //  from that find the reffered user
+    let findReferralWallet;
+
+    if (findUser?.referredBy) {
+      // Level one user :::::::::::
+
+      const level1User = await registratedUser.findOne({
+        _id: findUser?.referredBy
+      });
+
+      let level2User;
+
+      if (level1User?.referredBy) {
+        // Level 2 user :::::::::::::
+        level2User = await registratedUser.findOne({
+          _id: level1User?.referredBy
+        });
+      }
+
+      //  Find level master based on the referred User level
+      let updateLevel1UserWallet;
+      let updateLeve2UserWallet;
+
+      if (level1User) {
+        // Find level 1 commisssion ::::::::::::
+        const findLevelOneCommision = await referalLevel.findOne({
+          Level: "Level 1"
+        });
+
+        // Find course to get the courseFee
+
+        const findCourse = await Courses.findOne({ _id: courseId });
+
+        // Calculate the wallet income using level commision
+
+        percentage = findLevelOneCommision?.LevelCommission;
+        coursePrice = findCourse?.price;
+        walletAmount = (parseInt(percentage) / 100) * parseInt(coursePrice);
+
+        updateLevel1UserWallet = await referralWallet.updateOne(
+          { userId: level1User?._id, "levels.levelName": "Level 1" },
+          {
+            $set: {
+              "levels.$.levelName": "Level 1"
+            },
+            $inc: {
+              totalIncome: walletAmount,
+              "levels.$.levelIncome": walletAmount
+            },
+            $push: {
+              activeUsers: userId,
+              "levels.$.totalReferrals": userId
+            },
+            $pull: {
+              inActiveUsers: userId
+            }
+          },
+          { new: true }
+        );
+      }
+
+      if (level2User) {
+        const findWallet = await referralWallet.findOne({
+          userId: level2User?._id
+        });
+
+        // Find level 2 commisssion ::::::::::::
+
+        const findLevelTwoCommision = await referalLevel.findOne({
+          Level: "Level 2"
+        });
+
+        // Find course to get the courseFee
+
+        const findCourse = await Courses.findOne({ _id: courseId });
+
+        // Calculate the wallet income using level commision
+
+        levelTwopercentage = findLevelTwoCommision?.LevelCommission;
+        levelTwocoursePrice = findCourse?.price;
+        levelTwowalletAmount =
+          (parseInt(levelTwopercentage) / 100) * parseInt(levelTwocoursePrice);
+
+        if (findWallet.activeUsers.length >= 2) {
+          updateLeve2UserWallet = await referralWallet.updateOne(
+            { userId: level2User?._id, "levels.levelName": "Level 2" },
+            {
+              $set: {
+                "levels.$.levelName": "Level 2",
+                "levels.$.visibility":true
+              },
+              $inc: {
+                totalIncome: levelTwowalletAmount,
+                "levels.$.levelIncome": levelTwowalletAmount
+              },
+              $push: {
+                activeUsers: userId,
+                "levels.$.totalReferrals": userId
+              },
+              $pull: {
+                inActiveUsers: userId
+              }
+            },
+            { new: true }
+          );
+        }else{
+          updateLeve2UserWallet = await referralWallet.updateOne(
+            { userId: level2User?._id, "levels.levelName": "Level 2" },
+            {
+              $set: {
+                "levels.$.levelName": "Level 2",
+                "levels.$.visibility":false
+              },
+              $inc: {
+                totalIncome: levelTwowalletAmount,
+                "levels.$.levelIncome": levelTwowalletAmount
+              },
+              $push: {
+                activeUsers: userId,
+                "levels.$.totalReferrals": userId
+              },
+              $pull: {
+                inActiveUsers: userId
+              }
+            },
+            { new: true }
+          );
+        }
+      }
+    }
+
     if (!isPurchasedCourseExist) {
       const checkOut = await purchasedCourse.create({
         userId: userId,
@@ -106,9 +295,11 @@ export const checkOutController = asyncHandler(async (req, res) => {
         paymentId: paymentId,
         purchasedAt: formattedDate
       });
-      res
-        .status(200)
-        .json({ message: "Course purchased successfully", status: true });
+
+      res.status(200).json({
+        message: "Course purchased successfully",
+        status: findReferralWallet
+      });
     } else {
       res.status(409).json({ message: "Course already exist", status: true });
     }

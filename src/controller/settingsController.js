@@ -239,3 +239,9 @@ export const changePasswordController = asyncHandler(async (req, res) => {
     res.status(500).json({ message: "Something went wrong", data: error });
   }
 });
+
+
+
+// @desc    wallet find api
+// @route   put /api/settings/changePassword
+// @access  user

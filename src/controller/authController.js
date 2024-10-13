@@ -4,6 +4,7 @@ import { sendOTP } from "../utils/TwilioConfig.js";
 import registratedUser from "../database/registratedUser.js";
 import generateToken from "../utils/generateToken.js";
 import OtpStore from "../database/otpStore.js";
+import referralWallet from "../database/referralWallet.js";
 
 let sendOtp = [];
 
@@ -29,8 +30,6 @@ function generateRandomCode() {
 
   return result;
 }
-let randomCouponCode = generateRandomCode();
-console.log(sendOtp, "sendOtpsendOtpsendOtp");
 
 // @desc    register
 // @route   post /api/auth/register
@@ -64,7 +63,9 @@ export const registrationController = asyncHandler(async (req, res) => {
           });
         });
     } else {
-      res.status(400).json({ message: "Email or Phone already exist", status: false });
+      res
+        .status(400)
+        .json({ message: "Email or Phone already exist", status: false });
     }
   } catch (error) {
     console.log(error, "errorrrrrrrrrr");
@@ -81,14 +82,33 @@ export const verifyOtpController = asyncHandler(async (req, res) => {
     let { name, email, phoneNumber, countryCode, password, otp, referralCode } =
       req.body;
 
+    let randomCouponCode = generateRandomCode();
+
     const findStoredOtp = await OtpStore.findOne({ phoneNumber });
 
     let findUserWithReferralCode;
+    let nextLevel;
 
     if (referralCode) {
       findUserWithReferralCode = await registratedUser.findOne({
         referralCode: referralCode
       });
+      // // Get the current levels array
+      // const levels = findUserWithReferralCode.levels;
+
+      // // Check the last level in the levels array
+      // const lastLevel =
+      //   levels.length > 0 ? levels[levels.length - 1].levelName : null;
+
+      // if (lastLevel) {
+      //   // Extract the number from the last level name (e.g., "Level 1" -> 1)
+      //   const lastLevelNumber = parseInt(lastLevel.split(" ")[1], 10);
+      //   // Increment the level number for the next level
+      //   nextLevel = `Level ${lastLevelNumber + 1}`;
+      // } else {
+      //   // If no levels exist, start from Level 1
+      //   nextLevel = "Level 1";
+      // }
     }
 
     if (otp == findStoredOtp?.otp) {
@@ -107,6 +127,51 @@ export const verifyOtpController = asyncHandler(async (req, res) => {
           ? findUserWithReferralCode?._id
           : ""
       });
+      if (referralCode) {
+        await registratedUser.findByIdAndUpdate(
+          findUserWithReferralCode._id,
+          {
+            $push: { levels: { levelName: "Level 1", userId: createUser._id } }
+          }, // Push the new level
+          { new: true, useFindAndModify: false } // Return the updated document
+        );
+
+        const updateWallet = await referralWallet.updateOne(
+          { userId: findUserWithReferralCode?._id },
+          {
+            $push: {
+              totalTeamMembers: createUser._id,
+              inActiveUsers: createUser._id
+            }
+          }
+        );
+      }
+
+      const findWallet = await referralWallet.findOne({
+        userId: createUser._id
+      });
+
+      if (!findWallet) {
+        const createWallet = await referralWallet.create({
+          userId: createUser._id,
+          totalIncome: 0,
+          levels: [
+            {
+              levelName: "Level 1",
+              visibility: true,
+              levelIncome: 0,
+              totalReferrals: []
+            },
+            {
+              levelName: "Level 2",
+              visibility: false,
+              levelIncome: 0,
+              totalReferrals: []
+            }
+          ]
+        });
+      }
+
       let token = generateToken(createUser._id);
       res.status(200).json({
         message: "otp verified successfully",
