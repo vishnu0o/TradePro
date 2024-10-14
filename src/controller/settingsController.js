@@ -5,6 +5,7 @@ import { uploadFileToS3 } from "../utils/S3Upload.js";
 import fs from "fs";
 import wishlist from "../database/wishlist.js";
 import Courses from "../database/Course.js";
+import referralWallet from "../database/referralWallet.js";
 
 // @desc    profile find
 // @route   get /api/settings/findProfile
@@ -240,8 +241,27 @@ export const changePasswordController = asyncHandler(async (req, res) => {
   }
 });
 
-
-
 // @desc    wallet find api
-// @route   put /api/settings/changePassword
+// @route   get /api/settings/findWallet
 // @access  user
+
+export const findWalletController = asyncHandler(async (req, res) => {
+  try {
+    const { id } = req.query;
+    console.log(req.query, "queryyyyyyyyyyyyyy");
+
+    const findWallet = await referralWallet
+      .findOne({ userId: id })
+      .populate("totalTeamMembers")
+      .populate("activeUsers")
+      .populate("inActiveUsers");
+
+    console.log(findWallet, "findWalletfindWalletfindWallet");
+    res
+      .status(200)
+      .json({ message: "wallet find success", data: findWallet, status: true });
+  } catch (error) {
+    console.log(error, "errorrrrrrrrrr");
+    res.status(500).json({ message: "Something went wrong", data: error });
+  }
+});

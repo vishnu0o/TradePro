@@ -156,6 +156,10 @@ export const checkOutController = asyncHandler(async (req, res) => {
 
     const findUser = await registratedUser.findOne({ _id: userId });
 
+    // update course
+
+    const updateCourse = await Courses.updateOne({_id:courseId},{$inc:{entrolledStudents:1}})
+
     //  from that find the reffered user
     let findReferralWallet;
 

@@ -4,6 +4,7 @@ import {
   changePasswordController,
   createWishlistController,
   findReferralController,
+  findWalletController,
   findWishlistcontroller,
   profileFindController,
   profileUpdateController,
@@ -20,6 +21,8 @@ router.route("/createWishlist").post(auth, createWishlistController);
 router.route("/removeWishlist").delete(auth, removeWishlistcontroller);
 router.route("/findReferralCode").get(auth, findReferralController);
 router.route("/changePassword").put(auth, changePasswordController);
+router.route("/findWallet").get(auth, findWalletController);
+
 
 
 
