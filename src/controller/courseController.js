@@ -31,29 +31,32 @@ export const courseFindController = asyncHandler(async (req, res) => {
       .lean();
 
     // Add totalChapters and totalQuiz to each course
-    findPurchasedCourse.forEach((course) => {
-      let totalChapters = 0;
-      let totalQuiz = 0;
+    if(findPurchasedCourse){
 
-      // Ensure lessons are present
-      if (course.courseId.lessons && course.courseId.lessons.length) {
-        course.courseId.lessons.forEach((lesson) => {
-          // Count the chapters if they exist
-          if (lesson.chapters) {
-            totalChapters += lesson.chapters.length;
-          }
-
-          // Count the quizzes if they exist
-          if (lesson.quiz) {
-            totalQuiz += lesson.quiz.length;
-          }
-        });
-      }
-
-      // Add new keys to the course object
-      course.totalChapters = totalChapters;
-      course.totalQuiz = totalQuiz;
-    });
+      findPurchasedCourse.forEach((course) => {
+        let totalChapters = 0;
+        let totalQuiz = 0;
+  
+        // Ensure lessons are present
+        if (course.courseId?.lessons && course.courseId?.lessons.length) {
+          course.courseId.lessons.forEach((lesson) => {
+            // Count the chapters if they exist
+            if (lesson.chapters) {
+              totalChapters += lesson.chapters.length;
+            }
+  
+            // Count the quizzes if they exist
+            if (lesson.quiz) {
+              totalQuiz += lesson.quiz.length;
+            }
+          });
+        }
+  
+        // Add new keys to the course object
+        course.totalChapters = totalChapters;
+        course.totalQuiz = totalQuiz;
+      });
+    }
 
     // Now `findPurchasedCourse` contains `totalChapters` and `totalQuiz`
     console.log(findPurchasedCourse);
@@ -156,7 +159,10 @@ export const checkOutController = asyncHandler(async (req, res) => {
 
     // update course
 
-    const updateCourse = await Courses.updateOne({_id:courseId},{$inc:{entrolledStudents:1}})
+    const updateCourse = await Courses.updateOne(
+      { _id: courseId },
+      { $inc: { entrolledStudents: 1 } }
+    );
 
     //  from that find the reffered user
     let findReferralWallet;
@@ -247,7 +253,7 @@ export const checkOutController = asyncHandler(async (req, res) => {
             {
               $set: {
                 "levels.$.levelName": "Level 2",
-                "levels.$.visibility":true
+                "levels.$.visibility": true
               },
               $inc: {
                 totalIncome: levelTwowalletAmount,
@@ -263,13 +269,13 @@ export const checkOutController = asyncHandler(async (req, res) => {
             },
             { new: true }
           );
-        }else{
+        } else {
           updateLeve2UserWallet = await referralWallet.updateOne(
             { userId: level2User?._id, "levels.levelName": "Level 2" },
             {
               $set: {
                 "levels.$.levelName": "Level 2",
-                "levels.$.visibility":false
+                "levels.$.visibility": false
               },
               $inc: {
                 totalIncome: levelTwowalletAmount,
@@ -337,3 +343,33 @@ export const chapterIsPlayedController = asyncHandler(async (req, res) => {
     res.status(500).json({ message: "Something went wrong", data: error });
   }
 });
+
+// @desc    Course Rating api
+// @route   post /api/course/courseRating
+// @access  user
+
+export const courseRatingController = asyncHandler(async (req, res) => {
+  try {
+    const { courseId, rating } = req.body; 
+
+    const findAndUpdateCourse = await Courses.findOneAndUpdate(
+      { _id: courseId },
+      {
+        $inc: { rating: 1 }, 
+        $set: { starRating: rating }
+      },
+      { new: true }
+    );
+
+    if (!findAndUpdateCourse) {
+      return res.status(404).json({ message: "Course not found", status: false });
+    }
+
+    res.status(200).json({ message: "Your rating added successfully", status: true });
+
+  } catch (error) {
+    console.log(error, "error");
+    res.status(500).json({ message: "Something went wrong", data: error });
+  }
+});
+

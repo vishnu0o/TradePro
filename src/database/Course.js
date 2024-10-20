@@ -26,7 +26,7 @@ const Schema = new mongoose.Schema({
     type: String
   },
   rating: {
-    type: String
+    type: Number
   },
   starRating: {
     type: Number
