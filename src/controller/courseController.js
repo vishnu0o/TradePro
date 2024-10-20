@@ -100,9 +100,7 @@ export const courseFindOneController = asyncHandler(async (req, res) => {
 
     findCourse.lessons.forEach((lesson) => {
       numberOfVideos += lesson.chapters.length;
-      lesson.chapters.forEach((chapter) => {
-        quizCount += chapter?.quiz?.length;
-      });
+      quizCount += lesson?.quiz?.length;
     });
 
     res.status(200).json({

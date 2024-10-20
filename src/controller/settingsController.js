@@ -157,8 +157,11 @@ export const findWishlistcontroller = asyncHandler(async (req, res) => {
 
 export const removeWishlistcontroller = asyncHandler(async (req, res) => {
   try {
-    const { wishlistID, userID, courseID } = req.query;
-    const removeWishlist = await wishlist.deleteOne({ _id: wishlistID });
+    const {userID, courseID } = req.query;
+    const removeWishlist = await wishlist.deleteOne({
+      courseId: courseID,
+      userId: userID
+    });
     await Courses.updateOne(
       { _id: courseID },
       { $pull: { wishlist_User: userID } }
@@ -249,7 +252,6 @@ export const findWalletController = asyncHandler(async (req, res) => {
   try {
     const { id } = req.query;
     console.log(req.query, "queryyyyyyyyyyyyyy");
-
     const findWallet = await referralWallet
       .findOne({ userId: id })
       .populate("totalTeamMembers")
