@@ -50,6 +50,15 @@ const Schema = new mongoose.Schema({
   referredBy: {
     type: String
   },
+  isPurchased:{
+    type:Boolean
+  },
+  referralDate:{
+    type:String
+  },
+  referralBonusReceivedDate:{
+    type:String
+  },
   levels: [{ levelName: { type: String }, userId: { type: String } }]
 });
 

@@ -256,12 +256,46 @@ export const findWalletController = asyncHandler(async (req, res) => {
       .findOne({ userId: id })
       .populate("totalTeamMembers")
       .populate("activeUsers")
-      .populate("inActiveUsers");
+      .populate("inActiveUsers")
+      .populate("levels.totalReferrals") 
+      .populate("levels.activeUsers")  
+      .populate("levels.inActiveUsers");
+
+
+    const data = {
+      _id:findWallet?._id,
+      userId:findWallet?.userId,
+      totalIncome:findWallet?.totalIncome,
+      totalTeamMembers:findWallet?.totalTeamMembers?.length||0,
+      activeUsers:findWallet?.activeUsers?.length||0,
+      inActiveUsers:findWallet?.inActiveUsers?.length||0,
+      level1:{
+        levelName:findWallet?.levels[0]?.levelName||"-",
+        visibility: findWallet?.levels[0]?.visibility|| false,
+        levelIncome:findWallet?.levels[0]?.levelIncome,
+        totalReferrals:findWallet?.levels[0]?.totalReferrals?.length||0,
+        activeUsers:findWallet?.levels[0]?.activeUsers?.length||0,
+        inActiveUsers:findWallet?.levels[0]?.inActiveUsers?.length||0,
+        ActiveUserDetails:findWallet?.levels[0]?.activeUsers,
+        inActiveUserDetails:findWallet?.levels[0]?.inActiveUsers
+      },
+      level2:{
+        levelName:findWallet?.levels[1]?.levelName||"-",
+        visibility: findWallet?.levels[1]?.visibility|| false,
+        levelIncome:findWallet?.levels[1]?.levelIncome,
+        totalReferrals:findWallet?.levels[1]?.totalReferrals?.length||0,
+        activeUsers:findWallet?.levels[1]?.activeUsers?.length||0,
+        inActiveUsers:findWallet?.levels[1]?.inActiveUsers?.length||0,
+        ActiveUserDetails:findWallet?.levels[1]?.activeUsers,
+        inActiveUserDetails:findWallet?.levels[1]?.inActiveUsers
+      }
+
+    }
 
     console.log(findWallet, "findWalletfindWalletfindWallet");
     res
       .status(200)
-      .json({ message: "wallet find success", data: findWallet, status: true });
+      .json({ message: "wallet find success", data: data, status: true });
   } catch (error) {
     console.log(error, "errorrrrrrrrrr");
     res.status(500).json({ message: "Something went wrong", data: error });

@@ -38,6 +38,7 @@ function generateRandomCode() {
 export const registrationController = asyncHandler(async (req, res) => {
   try {
     let { email, phoneNumber } = req.body;
+
     const isUserExist = await registratedUser.findOne({
       $or: [{ email: email }, { phoneNumber: phoneNumber }]
     });
@@ -82,6 +83,15 @@ export const verifyOtpController = asyncHandler(async (req, res) => {
     let { name, email, phoneNumber, countryCode, password, otp, referralCode } =
       req.body;
 
+    // Formdatted current date
+
+    const currentDate = new Date();
+    const formattedDate = currentDate.toLocaleDateString("en-GB", {
+      day: "numeric",
+      month: "long",
+      year: "numeric"
+    });
+
     let randomCouponCode = generateRandomCode();
 
     const findStoredOtp = await OtpStore.findOne({ phoneNumber });
@@ -125,7 +135,10 @@ export const verifyOtpController = asyncHandler(async (req, res) => {
         referralCode: randomCouponCode,
         referredBy: findUserWithReferralCode
           ? findUserWithReferralCode?._id
-          : ""
+          : "",
+        isPurchased: false,
+        referralDate: referralCode ? formattedDate : "",
+        referralBonusReceivedDate: ""
       });
       if (referralCode) {
         await registratedUser.findByIdAndUpdate(
@@ -137,12 +150,33 @@ export const verifyOtpController = asyncHandler(async (req, res) => {
         );
 
         const updateWallet = await referralWallet.updateOne(
-          { userId: findUserWithReferralCode?._id },
+          { userId: findUserWithReferralCode?._id }, // Find the user's wallet
           {
             $push: {
-              totalTeamMembers: createUser._id,
-              inActiveUsers: createUser._id
+              totalTeamMembers: createUser._id, // Update total team members
+              inActiveUsers: createUser._id, // Update inactive users
+              "levels.$[level].totalReferrals": createUser._id, // Update total referrals in the specified level
+              "levels.$[level].inActiveUsers": createUser._id // Update inactive users in the specified level
             }
+          },
+          {
+            arrayFilters: [{ "level.levelName": "Level 1" }] // Filter to update the correct level by levelName
+          }
+        );
+      }
+      if (findUserWithReferralCode?.referredBy) {
+        const updateWallet = await referralWallet.updateOne(
+          { userId: findUserWithReferralCode?.referredBy }, // Find the user's wallet
+          {
+            $push: {
+              totalTeamMembers: createUser._id, // Update total team members
+              inActiveUsers: createUser._id, // Update inactive users
+              "levels.$[level].totalReferrals": createUser._id, // Update total referrals in the specified level
+              "levels.$[level].inActiveUsers": createUser._id // Update inactive users in the specified level
+            }
+          },
+          {
+            arrayFilters: [{ "level.levelName": "Level 2" }] // Filter to update the correct level by levelName
           }
         );
       }
@@ -155,18 +189,23 @@ export const verifyOtpController = asyncHandler(async (req, res) => {
         const createWallet = await referralWallet.create({
           userId: createUser._id,
           totalIncome: 0,
+          isPurchased: false,
           levels: [
             {
               levelName: "Level 1",
               visibility: true,
               levelIncome: 0,
-              totalReferrals: []
+              totalReferrals: [],
+              activeUsers: [],
+              inActiveUsers: []
             },
             {
               levelName: "Level 2",
               visibility: false,
               levelIncome: 0,
-              totalReferrals: []
+              totalReferrals: [],
+              activeUsers: [],
+              inActiveUsers: []
             }
           ]
         });

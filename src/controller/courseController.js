@@ -31,12 +31,11 @@ export const courseFindController = asyncHandler(async (req, res) => {
       .lean();
 
     // Add totalChapters and totalQuiz to each course
-    if(findPurchasedCourse){
-
+    if (findPurchasedCourse) {
       findPurchasedCourse.forEach((course) => {
         let totalChapters = 0;
         let totalQuiz = 0;
-  
+
         // Ensure lessons are present
         if (course.courseId?.lessons && course.courseId?.lessons.length) {
           course.courseId.lessons.forEach((lesson) => {
@@ -44,14 +43,14 @@ export const courseFindController = asyncHandler(async (req, res) => {
             if (lesson.chapters) {
               totalChapters += lesson.chapters.length;
             }
-  
+
             // Count the quizzes if they exist
             if (lesson.quiz) {
               totalQuiz += lesson.quiz.length;
             }
           });
         }
-  
+
         // Add new keys to the course object
         course.totalChapters = totalChapters;
         course.totalQuiz = totalQuiz;
@@ -215,10 +214,11 @@ export const checkOutController = asyncHandler(async (req, res) => {
             },
             $push: {
               activeUsers: userId,
-              "levels.$.totalReferrals": userId
+              "levels.$.activeUsers": userId
             },
             $pull: {
-              inActiveUsers: userId
+              inActiveUsers: userId,
+              "levels.$.inActiveUsers": userId
             }
           },
           { new: true }
@@ -261,10 +261,11 @@ export const checkOutController = asyncHandler(async (req, res) => {
               },
               $push: {
                 activeUsers: userId,
-                "levels.$.totalReferrals": userId
+                "levels.$.activeUsers": userId
               },
               $pull: {
-                inActiveUsers: userId
+                inActiveUsers: userId,
+                "levels.$.inActiveUsers": userId
               }
             },
             { new: true }
@@ -283,10 +284,12 @@ export const checkOutController = asyncHandler(async (req, res) => {
               },
               $push: {
                 activeUsers: userId,
-                "levels.$.totalReferrals": userId
+                "levels.$.activeUsers": userId
               },
               $pull: {
-                inActiveUsers: userId
+                inActiveUsers: userId,
+                "levels.$.inActiveUsers": userId
+
               }
             },
             { new: true }
@@ -303,6 +306,15 @@ export const checkOutController = asyncHandler(async (req, res) => {
         paymentId: paymentId,
         purchasedAt: formattedDate
       });
+
+      const updateUser = await registratedUser.updateOne(
+        { _id: userId },
+        {
+          $set: {
+            isPurchased: true
+          }
+        }
+      );
 
       res.status(200).json({
         message: "Course purchased successfully",
@@ -350,26 +362,28 @@ export const chapterIsPlayedController = asyncHandler(async (req, res) => {
 
 export const courseRatingController = asyncHandler(async (req, res) => {
   try {
-    const { courseId, rating } = req.body; 
+    const { courseId, rating } = req.body;
 
     const findAndUpdateCourse = await Courses.findOneAndUpdate(
       { _id: courseId },
       {
-        $inc: { rating: 1 }, 
+        $inc: { rating: 1 },
         $set: { starRating: rating }
       },
       { new: true }
     );
 
     if (!findAndUpdateCourse) {
-      return res.status(404).json({ message: "Course not found", status: false });
+      return res
+        .status(404)
+        .json({ message: "Course not found", status: false });
     }
 
-    res.status(200).json({ message: "Your rating added successfully", status: true });
-
+    res
+      .status(200)
+      .json({ message: "Your rating added successfully", status: true });
   } catch (error) {
     console.log(error, "error");
     res.status(500).json({ message: "Something went wrong", data: error });
   }
 });
-

@@ -7,6 +7,7 @@ const Schema = new mongoose.Schema({
   totalIncome: {
     type: Number
   },
+
   totalTeamMembers: [
     {
       type: mongoose.Schema.Types.ObjectId,
@@ -35,7 +36,19 @@ const Schema = new mongoose.Schema({
           type: mongoose.Schema.Types.ObjectId,
           ref: "registratedUser"
         }
-      ]
+      ],
+      activeUsers: [
+        {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "registratedUser"
+        }
+      ],
+      inActiveUsers: [
+        {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "registratedUser"
+        }
+      ],
     }
   ]
 });

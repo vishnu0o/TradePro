@@ -26,7 +26,7 @@ const Schema = new mongoose.Schema({
   purchasedAt: {
     type: String,
     required: true
-  }
+  },
 });
 
 const purchasedCourse = mongoose.model("purchasedCourse", Schema);
