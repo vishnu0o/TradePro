@@ -156,7 +156,12 @@ export const verifyOtpController = asyncHandler(async (req, res) => {
               totalTeamMembers: createUser._id, // Update total team members
               inActiveUsers: createUser._id, // Update inactive users
               "levels.$[level].totalReferrals": createUser._id, // Update total referrals in the specified level
-              "levels.$[level].inActiveUsers": createUser._id // Update inactive users in the specified level
+              "levels.$[level].inActiveUsers": createUser._id, // Update inactive users in the specified level
+              referralBonusReceivedDate: {
+                // Push new object to referralBonusReceivedDate array
+                userId: createUser._id,
+                date: ""
+              }
             }
           },
           {
@@ -172,7 +177,12 @@ export const verifyOtpController = asyncHandler(async (req, res) => {
               totalTeamMembers: createUser._id, // Update total team members
               inActiveUsers: createUser._id, // Update inactive users
               "levels.$[level].totalReferrals": createUser._id, // Update total referrals in the specified level
-              "levels.$[level].inActiveUsers": createUser._id // Update inactive users in the specified level
+              "levels.$[level].inActiveUsers": createUser._id, // Update inactive users in the specified level
+              referralBonusReceivedDate: {
+                // Push new object to referralBonusReceivedDate array
+                userId: createUser._id,
+                date: ""
+              }
             }
           },
           {
@@ -190,6 +200,12 @@ export const verifyOtpController = asyncHandler(async (req, res) => {
           userId: createUser._id,
           totalIncome: 0,
           isPurchased: false,
+          referralBonusReceivedDate: [
+            {
+              userId: null,
+              date: ""
+            }
+          ],
           levels: [
             {
               levelName: "Level 1",
@@ -222,6 +238,7 @@ export const verifyOtpController = asyncHandler(async (req, res) => {
       res.status(500).json({ message: "otp not matching" });
     }
   } catch (error) {
+    console.log(error, "error");
     res.status(500).json({ message: "Something went wrong", data: error });
   }
 });

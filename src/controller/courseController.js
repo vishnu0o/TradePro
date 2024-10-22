@@ -185,6 +185,8 @@ export const checkOutController = asyncHandler(async (req, res) => {
       //  Find level master based on the referred User level
       let updateLevel1UserWallet;
       let updateLeve2UserWallet;
+      let updateLevel1ReferralBounsDate;
+      let updateLevel2ReferralBounsDate;
 
       if (level1User) {
         // Find level 1 commisssion ::::::::::::
@@ -222,6 +224,17 @@ export const checkOutController = asyncHandler(async (req, res) => {
             }
           },
           { new: true }
+        );
+
+        updateLevel1ReferralBounsDate = await referralWallet.updateOne(
+          {
+            "referralBonusReceivedDate.userId": userId
+          },
+          {
+            $push: {
+              "referralBonusReceivedDate.$.date": formattedDate
+            }
+          }
         );
       }
 
@@ -270,6 +283,16 @@ export const checkOutController = asyncHandler(async (req, res) => {
             },
             { new: true }
           );
+          updateLevel1ReferralBounsDate = await referralWallet.updateOne(
+            {
+              "referralBonusReceivedDate.userId": userId
+            },
+            {
+              $push: {
+                "referralBonusReceivedDate.$.date": formattedDate
+              }
+            }
+          );
         } else {
           updateLeve2UserWallet = await referralWallet.updateOne(
             { userId: level2User?._id, "levels.levelName": "Level 2" },
@@ -289,13 +312,22 @@ export const checkOutController = asyncHandler(async (req, res) => {
               $pull: {
                 inActiveUsers: userId,
                 "levels.$.inActiveUsers": userId
-
               }
             },
             { new: true }
           );
+          updateLevel1ReferralBounsDate = await referralWallet.updateOne(
+            {
+              "referralBonusReceivedDate.userId": userId
+            },
+            {
+              $push: {
+                "referralBonusReceivedDate.$.date": formattedDate
+              }
+            }
+          );
         }
-      }
+      } 
     }
 
     if (!isPurchasedCourseExist) {

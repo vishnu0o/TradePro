@@ -157,7 +157,7 @@ export const findWishlistcontroller = asyncHandler(async (req, res) => {
 
 export const removeWishlistcontroller = asyncHandler(async (req, res) => {
   try {
-    const {userID, courseID } = req.query;
+    const { userID, courseID } = req.query;
     const removeWishlist = await wishlist.deleteOne({
       courseId: courseID,
       userId: userID
@@ -257,45 +257,86 @@ export const findWalletController = asyncHandler(async (req, res) => {
       .populate("totalTeamMembers")
       .populate("activeUsers")
       .populate("inActiveUsers")
-      .populate("levels.totalReferrals") 
-      .populate("levels.activeUsers")  
+      .populate("levels.totalReferrals")
+      .populate("levels.activeUsers")
       .populate("levels.inActiveUsers");
 
-
     const data = {
-      _id:findWallet?._id,
-      userId:findWallet?.userId,
-      totalIncome:findWallet?.totalIncome,
-      totalTeamMembers:findWallet?.totalTeamMembers?.length||0,
-      activeUsers:findWallet?.activeUsers?.length||0,
-      inActiveUsers:findWallet?.inActiveUsers?.length||0,
-      level1:{
-        levelName:findWallet?.levels[0]?.levelName||"-",
-        visibility: findWallet?.levels[0]?.visibility|| false,
-        levelIncome:findWallet?.levels[0]?.levelIncome,
-        totalReferrals:findWallet?.levels[0]?.totalReferrals?.length||0,
-        activeUsers:findWallet?.levels[0]?.activeUsers?.length||0,
-        inActiveUsers:findWallet?.levels[0]?.inActiveUsers?.length||0,
-        ActiveUserDetails:findWallet?.levels[0]?.activeUsers,
-        inActiveUserDetails:findWallet?.levels[0]?.inActiveUsers
+      _id: findWallet?._id,
+      userId: findWallet?.userId,
+      totalIncome: findWallet?.totalIncome,
+      totalTeamMembers: findWallet?.totalTeamMembers?.length || 0,
+      activeUsers: findWallet?.activeUsers?.length || 0,
+      inActiveUsers: findWallet?.inActiveUsers?.length || 0,
+      level1: {
+        levelName: findWallet?.levels[0]?.levelName || "-",
+        visibility: findWallet?.levels[0]?.visibility || false,
+        levelIncome: findWallet?.levels[0]?.levelIncome,
+        totalReferrals: findWallet?.levels[0]?.totalReferrals?.length || 0,
+        activeUsers: findWallet?.levels[0]?.activeUsers?.length || 0,
+        inActiveUsers: findWallet?.levels[0]?.inActiveUsers?.length || 0,
+        totalUsersDetails: findWallet?.levels[0]?.totalReferrals,
+        ActiveUserDetails: findWallet?.levels[0]?.activeUsers,
+        inActiveUserDetails: findWallet?.levels[0]?.inActiveUsers
       },
-      level2:{
-        levelName:findWallet?.levels[1]?.levelName||"-",
-        visibility: findWallet?.levels[1]?.visibility|| false,
-        levelIncome:findWallet?.levels[1]?.levelIncome,
-        totalReferrals:findWallet?.levels[1]?.totalReferrals?.length||0,
-        activeUsers:findWallet?.levels[1]?.activeUsers?.length||0,
-        inActiveUsers:findWallet?.levels[1]?.inActiveUsers?.length||0,
-        ActiveUserDetails:findWallet?.levels[1]?.activeUsers,
-        inActiveUserDetails:findWallet?.levels[1]?.inActiveUsers
+      level2: {
+        levelName: findWallet?.levels[1]?.levelName || "-",
+        visibility: findWallet?.levels[1]?.visibility || false,
+        levelIncome: findWallet?.levels[1]?.levelIncome,
+        totalReferrals: findWallet?.levels[1]?.totalReferrals?.length || 0,
+        activeUsers: findWallet?.levels[1]?.activeUsers?.length || 0,
+        inActiveUsers: findWallet?.levels[1]?.inActiveUsers?.length || 0,
+        totalUsersDetails: findWallet?.levels[0]?.totalReferrals,
+        ActiveUserDetails: findWallet?.levels[1]?.activeUsers,
+        inActiveUserDetails: findWallet?.levels[1]?.inActiveUsers
       }
-
-    }
+    };
 
     console.log(findWallet, "findWalletfindWalletfindWallet");
     res
       .status(200)
       .json({ message: "wallet find success", data: data, status: true });
+  } catch (error) {
+    console.log(error, "errorrrrrrrrrr");
+    res.status(500).json({ message: "Something went wrong", data: error });
+  }
+});
+
+// @desc    withdraw api
+// @route   get /api/settings/withdraw
+// @access  user
+
+export const withDrawalController = asyncHandler(async (req, res) => {
+  try {
+    const { userId } = req.body;
+
+    // Find the user's wallet
+    const findWallet = await referralWallet.findOne({ userId: userId });
+
+    // Check if active users are more than or equal to 2
+    if (findWallet.activeUsers.length >= 2) {
+      // Update the wallet by setting totalIncome to 0
+      const updatedWallet = await referralWallet.updateOne(
+        { userId: userId },
+        { $set: { totalIncome: 0 } }
+      );
+      res
+        .status(200)
+        .json({
+          message: "Wallet amount withdrawed successfully",
+          status: true
+        });
+    } else {
+      res
+        .status(400)
+        .json({
+          message: "you need minimum 2 active users to withdraw the amount",
+          status: false
+        });
+    }
+
+    // Respond with success (optional)
+    res.status(200).json({ message: "Withdrawal processed successfully" });
   } catch (error) {
     console.log(error, "errorrrrrrrrrr");
     res.status(500).json({ message: "Something went wrong", data: error });

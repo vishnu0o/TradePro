@@ -31,6 +31,15 @@ const Schema = new mongoose.Schema({
       levelName: { type: String },
       visibility: { type: Boolean },
       levelIncome: { type: Number },
+      referralBonusReceivedDate: [
+        {
+          userId: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "registratedUser"
+          },
+          date: { type: String }
+        }
+      ],
       totalReferrals: [
         {
           type: mongoose.Schema.Types.ObjectId,
@@ -48,7 +57,7 @@ const Schema = new mongoose.Schema({
           type: mongoose.Schema.Types.ObjectId,
           ref: "registratedUser"
         }
-      ],
+      ]
     }
   ]
 });

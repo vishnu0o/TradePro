@@ -8,7 +8,8 @@ import {
   findWishlistcontroller,
   profileFindController,
   profileUpdateController,
-  removeWishlistcontroller
+  removeWishlistcontroller,
+  withDrawalController
 } from "../controller/settingsController.js";
 import upload from "../utils/multer.js";
 const router = express.Router();
@@ -22,6 +23,8 @@ router.route("/removeWishlist").delete(auth, removeWishlistcontroller);
 router.route("/findReferralCode").get(auth, findReferralController);
 router.route("/changePassword").put(auth, changePasswordController);
 router.route("/findWallet").get(auth, findWalletController);
+router.route("/withdraw").post(auth, withDrawalController);
+
 
 
 
