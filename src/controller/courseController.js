@@ -13,10 +13,18 @@ import registratedUser from "../database/registratedUser.js";
 
 export const courseFindController = asyncHandler(async (req, res) => {
   try {
-    const { pageNumber, userId } = req.query;
+    const { pageNumber, userId, language } = req.query;
     const limit = 5;
     const skipValue = parseInt(pageNumber) * limit;
-    const findCourse = await Courses.find({}).limit(limit).skip(skipValue);
+    let findCourse;
+    if (language === "" || language === "All") {
+      console.log("nothingffffffffffff")
+      findCourse = await Courses.find({}).limit(limit).skip(skipValue);
+    } else {
+      findCourse = await Courses.find({ language: { $in: [language] } })
+        .limit(limit)
+        .skip(skipValue);
+    }
     const findPurchasedCourse = await purchasedCourse
       .find({ userId: userId })
       .populate({
@@ -58,7 +66,7 @@ export const courseFindController = asyncHandler(async (req, res) => {
     }
 
     // Now `findPurchasedCourse` contains `totalChapters` and `totalQuiz`
-    console.log(findPurchasedCourse);
+    console.log(findCourse,"findCoursefindCoursefindCourse");
 
     res.status(200).json({
       message: "Course find successfully",
@@ -327,7 +335,7 @@ export const checkOutController = asyncHandler(async (req, res) => {
             }
           );
         }
-      } 
+      }
     }
 
     if (!isPurchasedCourseExist) {

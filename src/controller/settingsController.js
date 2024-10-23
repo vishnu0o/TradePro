@@ -310,33 +310,23 @@ export const withDrawalController = asyncHandler(async (req, res) => {
   try {
     const { userId } = req.body;
 
-    // Find the user's wallet
-    const findWallet = await referralWallet.findOne({ userId: userId });
-
-    // Check if active users are more than or equal to 2
-    if (findWallet.activeUsers.length >= 2) {
-      // Update the wallet by setting totalIncome to 0
-      const updatedWallet = await referralWallet.updateOne(
+    const findUser = await registratedUser.findOne({ _id: userId });
+    if (findUser?.isPurchased) {
+      const updateWallet = await referralWallet.updateOne(
         { userId: userId },
         { $set: { totalIncome: 0 } }
       );
-      res
-        .status(200)
-        .json({
-          message: "Wallet amount withdrawed successfully",
-          status: true
-        });
-    } else {
-      res
-        .status(400)
-        .json({
-          message: "you need minimum 2 active users to withdraw the amount",
-          status: false
-        });
-    }
 
-    // Respond with success (optional)
-    res.status(200).json({ message: "Withdrawal processed successfully" });
+      res.status(200).json({
+        message: "Wallet amount withdrawed successfully",
+        status: true
+      });
+    } else {
+      res.status(400).json({
+        message: "You need to purchase a course to withdraw amount",
+        status: false
+      });
+    }
   } catch (error) {
     console.log(error, "errorrrrrrrrrr");
     res.status(500).json({ message: "Something went wrong", data: error });
