@@ -6,6 +6,7 @@ import Chapter from "../database/courseChapter.js";
 import referalLevel from "../database/referalLevelMaster.js";
 import referralWallet from "../database/referralWallet.js";
 import registratedUser from "../database/registratedUser.js";
+import transactionHistory from "../database/transactionHistory.js";
 
 // @desc    course find
 // @route   get /api/course/findCourse
@@ -212,6 +213,8 @@ export const checkOutController = asyncHandler(async (req, res) => {
         coursePrice = findCourse?.price;
         walletAmount = (parseInt(percentage) / 100) * parseInt(coursePrice);
 
+      
+
         updateLevel1UserWallet = await referralWallet.updateOne(
           { userId: level1User?._id, "levels.levelName": "Level 1" },
           {
@@ -244,6 +247,20 @@ export const checkOutController = asyncHandler(async (req, res) => {
             }
           }
         );
+
+
+        if(updateLevel1UserWallet){
+
+          await transactionHistory.create({
+            userId:level1User?._id,
+            transactionID:"#12345",
+            transactionDate:formattedDate,
+            Type:"Referral Commissioin",
+            Amount:walletAmount,
+            Status:"Success",
+            comment:`Referral bonus from ${findUser?.name}`
+          })
+        }
       }
 
       if (level2User) {
@@ -334,6 +351,20 @@ export const checkOutController = asyncHandler(async (req, res) => {
               }
             }
           );
+        }
+
+        if(updateLeve2UserWallet){
+
+          await transactionHistory.create({
+            userId:level2User?._id,
+            transactionID:"#12345",
+            transactionDate:formattedDate,
+            Type:"Referral Commissioin",
+            Amount:levelTwowalletAmount,
+            Status:"Success",
+            comment:`Referral bonus from ${findUser?.name}`
+          })
+
         }
       }
     }

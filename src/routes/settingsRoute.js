@@ -9,6 +9,7 @@ import {
   profileFindController,
   profileUpdateController,
   removeWishlistcontroller,
+  transactionHistoryController,
   withDrawalController
 } from "../controller/settingsController.js";
 import upload from "../utils/multer.js";
@@ -24,6 +25,8 @@ router.route("/findReferralCode").get(auth, findReferralController);
 router.route("/changePassword").put(auth, changePasswordController);
 router.route("/findWallet").get(auth, findWalletController);
 router.route("/withdraw").post(auth, withDrawalController);
+router.route("/transactionHistory").get(auth, transactionHistoryController);
+
 
 
 

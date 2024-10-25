@@ -6,6 +6,7 @@ import fs from "fs";
 import wishlist from "../database/wishlist.js";
 import Courses from "../database/Course.js";
 import referralWallet from "../database/referralWallet.js";
+import transactionHistory from "../database/transactionHistory.js";
 
 // @desc    profile find
 // @route   get /api/settings/findProfile
@@ -310,12 +311,33 @@ export const withDrawalController = asyncHandler(async (req, res) => {
   try {
     const { userId } = req.body;
 
+    const currentDate = new Date();
+    const formattedDate = currentDate.toLocaleDateString("en-GB", {
+      day: "numeric",
+      month: "long",
+      year: "numeric"
+    });
+
     const findUser = await registratedUser.findOne({ _id: userId });
+    const findReferralWallet = await referralWallet.findOne({ userId: userId });
     if (findUser?.isPurchased) {
       const updateWallet = await referralWallet.updateOne(
         { userId: userId },
-        { $set: { totalIncome: 0 } }
+        { $set: { totalIncome: 0 } },
+        { new: true }
       );
+
+      if (updateWallet) {
+        await transactionHistory.create({
+          userId: userId,
+          transactionID: "#12345",
+          transactionDate: formattedDate,
+          Type: "Withdraw",
+          Amount: findReferralWallet?.totalIncome,
+          Status: "Success",
+          comment: `Withdraw from wallet`
+        });
+      }
 
       res.status(200).json({
         message: "Wallet amount withdrawed successfully",
@@ -329,6 +351,30 @@ export const withDrawalController = asyncHandler(async (req, res) => {
     }
   } catch (error) {
     console.log(error, "errorrrrrrrrrr");
+    res.status(500).json({ message: "Something went wrong", data: error });
+  }
+});
+
+// @desc    Transaction history  api
+// @route   get /api/settings/transactionHistory
+// @access  user
+
+export const transactionHistoryController = asyncHandler(async (req, res) => {
+  try {
+    const { userId } = req.query;
+
+    const findTransactionHistory = await transactionHistory.find({
+      userId: userId
+    });
+
+    res
+      .status(200)
+      .json({
+        message: "Transaction find successfully",
+        data: findTransactionHistory
+      });
+  } catch (error) {
+    console.log(error, "error");
     res.status(500).json({ message: "Something went wrong", data: error });
   }
 });

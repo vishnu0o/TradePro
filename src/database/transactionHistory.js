@@ -5,9 +5,26 @@ const Schema = new mongoose.Schema({
     type: String,
     required: true
   },
-  
+  transactionID: {
+    type: String
+  },
+  transactionDate: {
+    type: String
+  },
+  Type: {
+    type: String
+  },
+  Amount: {
+    type: String
+  },
+  Status: {
+    type: String
+  },
+  comment: {
+    type: String
+  }
 });
 
-const registratedUser = mongoose.model("registratedUser", Schema);
+const transactionHistory = mongoose.model("transactionHistory", Schema);
 
-export default registratedUser;
+export default transactionHistory;
